@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+	 <meta charset="UTF-8">
+	<title>API CONSUMER APP FOR RM (Purecloud AR)</title>
+
+	<link href="src/4.1.1-bootstrap.min.css" rel="stylesheet">
+
+	<style type="text/css">
+		.row {
+			margin-top: 8px;
+		}
+	</style>
+
+	<script src="src/jquery-3.3.1.min.js"></script>
+	<script src="src/36.0.0-purecloud-platform-client-v2.min.js"></script>
+	<script src="src/CommonVars.js"></script>
+	<script src="src/CommonUtils.js"></script>
+	<script src="src/LoginAndSetupNotifications.js"></script>
+	<script src="src/LoginAndSecureTransfer.js"></script>
+	<script src="src/LoginAndCall.js"></script>
+	<script src="src/CheckAgent.js"></script>
+	<script src="src/CheckFlow.js"></script>
+
+	<script type="text/javascript">
+
+	// URL params
+	$.urlParam = function(name){
+	        var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        	if (results==null){
+	           return null;
+	        }
+	        else{
+	           return results[1] || 0;
+	        }
+	}
+
+	// Check token bearer in params
+	$.urlCheckToken = function(name) {
+	      	// Example : #access_token=ToeoIo-...etc...&expires_in=86399&token_type=bearer:40:4
+      		const accessToken = $.urlParam('access_token');
+	        if (typeof accessToken !== 'undefined' &&  accessToken !== null){
+        	        console.log('URL access_token: ', accessToken );
+                	const token = accessToken.split('&',2);
+	                localStorage.setItem('myApiClient.authData.token', token );
+	      	        return token;
+        	}
+	      	return 0;
+	}
+
+
+	// jQuery calls this when the DOM is available
+	$(document).ready(() => {
+		console.log('Ready : INDEX OF API CONSUMER APP FOR RM (Purecloud/AR)');
+		// Check token
+		$.urlCheckToken();
+
+		// Call phone number?
+		let phoneNumber = $.urlParam('dialString');
+	      	if (typeof phoneNumber !== 'undefined' && phoneNumber !== null) {
+			console.log('Call...');
+      			$('#messages').text('Call...' + phoneNumber);
+	        	Call( phoneNumber , window.location.href );
+			return;
+      		}
+
+		// Transfer to flowId?
+		let flowId = $.urlParam('flowId');
+		let userData = $.urlParam('userData');
+		if (typeof flowId !== 'undefined' && flowId !== null) {
+		console.log('Transfer....');
+		      	$('#messages').text('Transfer...' + flowId + ', ' + userData);
+		      	// obsolete : transferIVRSessionToFlowId( flowId , userData );
+		      	getActiveCallsAndMakeTransfer( flowId, userData );
+		      	return;
+      		}
+
+		// Transfer to flowName (retrieving flowId)?
+		let flowName = $.urlParam('flowName');
+		let userDataX = $.urlParam('userData');
+		if (typeof flowName !== 'undefined' && flowName !== null &&
+				typeof userDataX !== 'undefined' && userDataX !== null ) {
+		console.log('Transfer....');
+		      	$('#messages').text('Transfer...' + flowName + ', ' + userDataX);
+		      	getActiveCallsAndMakeTransferByName( flowName, userDataX );
+		      	return;
+      		}
+
+		// Login and assign available softphone to the current hostname/computername
+		let hostName = $.urlParam('hostName');
+		if (typeof hostName !== 'undefined' && hostName !== null) {
+				console.log('SetupNotifications w/softPhone...');
+				$('#messages').text('softPhone...' + hostName);
+				setupNotifications( hostName );
+				return;
+		}
+
+		// Check agent presence by email
+		let agentEmail = $.urlParam('agentEmail');
+		if (typeof agentEmail !== 'undefined' && agentEmail !== null) {
+			console.log('Checking agent presence...');
+			$('#messages').text('email...' + agentEmail);
+			statusUser( agentEmail );
+			$('#messages').text('Agent ' + agentEmail + ' is ...');
+			return;
+			}
+
+		// Check flowId by flowName (type=securecall)
+		let flowName2Check = $.urlParam('flowName');
+		if (typeof flowName2Check !== 'undefined' && flowName2Check !== null) {
+			console.log('Checking flowID by name...');
+			$('#messages').text('FlowName...' + flowName2Check);
+			flowIdByName( flowName2Check , 'securecall');
+			$('#messages').text('FlowID of ' + flowName2Check + ' is ...');
+			return;
+		}
+
+
+		console.log('By default : SetupNotifications...');
+		setupNotifications( '' );
+
+		console.log('End');
+	});
+
+	</script>
+</head>
+<body>
+		<div class="row">
+			<div class="col-sm-12">
+				INDEX: <span id="index">API CONSUMER APP FOR RM (Purecloud/AR)</span>
+				Menssages: <span id="messages"></span>
+			</div>
+		</div>
+</body>
+</html>
